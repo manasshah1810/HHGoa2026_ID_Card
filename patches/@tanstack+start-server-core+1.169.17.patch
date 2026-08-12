@@ -1,0 +1,34 @@
+diff --git a/node_modules/@tanstack/start-server-core/dist/esm/createStartHandler.js b/node_modules/@tanstack/start-server-core/dist/esm/createStartHandler.js
+index 34a1602..ee5f588 100644
+--- a/node_modules/@tanstack/start-server-core/dist/esm/createStartHandler.js
++++ b/node_modules/@tanstack/start-server-core/dist/esm/createStartHandler.js
+@@ -18,7 +18,19 @@ function getStartResponseHeaders(opts) {
+ }
+ var entriesPromise;
+ var hasWarnedMissingCsrfMiddleware = false;
+-var defaultCsrfMiddleware = createCsrfMiddleware({ filter: (ctx) => ctx.handlerType === "serverFn" });
++var _defaultCsrfMiddleware;
++function getDefaultCsrfMiddleware() {
++	if (!_defaultCsrfMiddleware) {
++		try {
++			_defaultCsrfMiddleware = createCsrfMiddleware({ filter: (ctx) => ctx.handlerType === "serverFn" });
++		} catch (e) {
++			// createMiddleware may be undefined in some server environments (e.g. Vercel Nitro).
++			// Fall back to a passthrough no-op middleware.
++			_defaultCsrfMiddleware = { options: { type: "request", server: undefined }, "~types": undefined };
++		}
++	}
++	return _defaultCsrfMiddleware;
++}
+ var getCachedBaseManifest = createCachedBaseManifestLoader(() => getStartManifest());
+ var getProdBaseManifest = () => getCachedBaseManifest();
+ var getBaseManifest = process.env.TSS_DEV_SERVER === "true" ? getStartManifest : getProdBaseManifest;
+@@ -235,7 +247,7 @@ function createStartHandler(cbOrOptions) {
+ 			];
+ 			const requestStartOptions = {
+ 				...startOptions,
+-				requestMiddleware: hasStartInstance ? startOptions.requestMiddleware : [defaultCsrfMiddleware],
++				requestMiddleware: hasStartInstance ? startOptions.requestMiddleware : [getDefaultCsrfMiddleware()],
+ 				serializationAdapters
+ 			};
+ 			const flattenedRequestMiddlewares = requestStartOptions.requestMiddleware ? flattenMiddlewares(requestStartOptions.requestMiddleware) : [];
