@@ -16,7 +16,7 @@ export default defineConfig(async ({ command }) => {
   // Add nitro plugin during production builds (detects Vercel vs Cloudflare automatically)
   if (command === "build") {
     const { nitro } = await import("nitro/vite");
-    const isVercel = Boolean(process.env.VERCEL);
+    const isVercel = Boolean(process.env["VERCEL"]);
     plugins.push(
       nitro(
         isVercel
