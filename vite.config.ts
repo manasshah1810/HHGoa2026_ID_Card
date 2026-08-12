@@ -13,18 +13,23 @@ export default defineConfig(async ({ command }) => {
     viteReact(),
   ];
 
-  // Only add nitro/cloudflare plugin during actual production builds
+  // Add nitro plugin during production builds (detects Vercel vs Cloudflare automatically)
   if (command === "build") {
     const { nitro } = await import("nitro/vite");
+    const isVercel = Boolean(process.env.VERCEL);
     plugins.push(
-      nitro({
-        preset: "cloudflare-pages",
-        output: {
-          dir: "dist",
-          serverDir: "dist/server",
-          publicDir: "dist/client",
-        },
-      })
+      nitro(
+        isVercel
+          ? { preset: "vercel" }
+          : {
+              preset: "cloudflare-pages",
+              output: {
+                dir: "dist",
+                serverDir: "dist/server",
+                publicDir: "dist/client",
+              },
+            }
+      )
     );
   }
 
